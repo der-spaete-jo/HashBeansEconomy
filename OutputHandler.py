@@ -58,7 +58,7 @@ class Historian():  # encapsulates full information over past periods s.t. agent
         self.createHistoryFile(agent.getName() + "_savings" + ".txt") 
         self.createHistoryFile(agent.getName() + "_hash" + ".txt")   
         self.createHistoryFile(agent.getName() + "_bean" + ".txt") 
-    def initializeEconomyHistory(self, agent):        
+    def initializeEconomyHistory(self):        
         self.createHistoryFile("history_file_" + "_no_of_consumers" + ".txt")
         self.createHistoryFile("history_file_" + "_no_of_hash_firms" + ".txt")
         self.createHistoryFile("history_file_" + "_no_of_bean_firms" + ".txt")
