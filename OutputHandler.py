@@ -155,37 +155,24 @@ class Historian():  # encapsulates full information over past periods s.t. agent
         # prepare sector-wide weighted mean price (weighted with the share of firms production in total production of the sector)
         # prepare global price index 
         # prepare GDP time series
-        
-    def prepareGraphs(self, max_period):   # more encapsulation needed, repeated similar code!
-        # prepare number of agents graph
+    
+    def buildFigure(self, max_period, title, xlable, ylable, data):
         fig = plt.figure()
-        fig.suptitle("Number of agents", fontsize=14, fontweight='bold')
+        fig.suptitle(title, fontsize=14, fontweight='bold')
         graph = fig.add_subplot(111)
-        line_1 = graph.plot(range(max_period), self.no_of_agents_time_series["consumers"], "r-")
-        line_2 = graph.plot(range(max_period), self.no_of_agents_time_series["hash_firms"], "b-")
-        line_3 = graph.plot(range(max_period), self.no_of_agents_time_series["bean_firms"], "g-")   
-        #plt.legend((line_1,line_2,line_3), ('consumer', 'hash firms', 'bean firms'))     
-        max_values = [int(max(l)) for l in list(self.no_of_agents_time_series.values())]
-        graph.axis([0, max_period, 0, 1.2*max(max_values)])
-        graph.set_ylabel("number")
-        graph.set_xlabel("period") 
-        # prepare sector-wide mean price graph
-        fig_1 = plt.figure()
-        fig_1.suptitle("Sector-wide mean prices", fontsize=14, fontweight='bold')
-        graph = fig_1.add_subplot(111)
-        graph.plot(range(max_period), self.sector_wide_mean_price_time_series["hash"], "b-")
-        graph.plot(range(max_period), self.sector_wide_mean_price_time_series["bean"], "g-")        
-        max_values = [int(max(l)) for l in list(self.sector_wide_mean_price_time_series.values())]
-        graph.axis([0, max_period, 0, 1.2*max(max_values)])
-        graph.set_ylabel("EUR")
-        graph.set_xlabel("period")
-        # prepare sector-wide production graph
-        fig_2 = plt.figure()
-        fig_2.suptitle("Sector-wide production", fontsize=14, fontweight='bold')
-        graph = fig_2.add_subplot(111)
-        graph.plot(range(max_period), self.sector_wide_production_time_series["hash"], "b-")
-        graph.plot(range(max_period), self.sector_wide_production_time_series["bean"], "g-")        
-        max_values = [int(max(l)) for l in list(self.sector_wide_production_time_series.values())]
-        graph.axis([0, max_period, 0, 1.2*max(max_values)])
-        graph.set_ylabel("units")
-        graph.set_xlabel("period")
+        max_value = 0
+        for time_series_with_displayprops in data:
+            graph.plot(range(max_period), time_series_with_displayprops[0] , time_series_with_displayprops[1])
+            #graph.set_legend("consumer")     
+            max_value = max(max_value, max(int(v) for v in time_series_with_displayprops[0]))
+        graph.axis([0, max_period, 0, 1.2*max_value])
+        graph.set_xlabel(xlable)
+        graph.set_ylabel(ylable)
+        fig.savefig(title + ".png")
+        
+    def prepareGraphs(self, max_period):
+        # prepare number of agents graph
+        self.buildFigure(max_period, "Number of agents", "period", "number", [(self.no_of_agents_time_series["consumers"], "r-"), (self.no_of_agents_time_series["hash_firms"], "b-"), (self.no_of_agents_time_series["bean_firms"], "g-")])
+        self.buildFigure(max_period, "Sector-wide mean prices", "period", "EUR", [(self.sector_wide_mean_price_time_series["hash"], "b-"), (self.sector_wide_mean_price_time_series["bean"], "g-")])
+        self.buildFigure(max_period, "Sector-wide production", "period", "units", [(self.sector_wide_production_time_series["hash"], "b-"), (self.sector_wide_production_time_series["bean"], "g-")])
+                
