@@ -10,27 +10,7 @@ import os
 
 class Historian():  # encapsulates full information over past periods s.t. agents have no access
     def __init__(self):
-        """ merger files """
-        """ the EconomyController """
-        # his files are already in a merged state, cause he is solo w.r.t. agent_type       
-        """ firms """
-        self.history_file_money = None
-        self.history_file_capacity = None
-        self.history_file_dividend = None
-        self.history_file_unit_price_hash = None
-        self.history_file_unit_price_bean = None
-        self.history_file_production_hash = None
-        self.history_file_production_bean = None
-        self.history_file_sales = None
-        self.history_file_revenue = None
-        self.history_file_total_costs = None
-        self.history_file_profit = None        
-        """ consumers """
-        self.history_file_income = None
-        self.history_file_expenditures = None
-        self.history_file_savings = None
-        self.history_file_hash = None
-        self.history_file_bean = None
+
         """ program organization """
         self.wd_local_path = None        
         self.history_files={}        
@@ -39,6 +19,7 @@ class Historian():  # encapsulates full information over past periods s.t. agent
         self.no_of_agents_time_series = {}  
         self.sector_wide_mean_price_time_series = {}
         self.sector_wide_production_time_series = {}
+        self.firm_weights_time_series = None
         
     def initializeFirmHistory(self, agent):
         self.createHistoryFile(agent.getName() + "_money" + ".txt")          # Given my liquidity,
@@ -100,8 +81,28 @@ class Historian():  # encapsulates full information over past periods s.t. agent
                     data = f.read()
                     with open(filename, "a") as merg_f:
                         merg_f.write(data + "\n")
+    
+    def buildTimeSeries(self, max_period, data_type, sector = None):
+        if sector:        
+            filename = "history_file_" + data_type + "_" + sector + ".txt"
+        else:
+            filename = "history_file_" + data_type + ".txt"                
+        with open(filename, "r") as f:
+            lines = f.read().splitlines()
+            lines = [line.split(";") for line in lines]
+        time_series = []
+        for T in range(max_period):
+            per_period_sum = 0
+            for line in lines:
+                try:
+                    per_period_sum += float(line[T])
+                except (ValueError, IndexError) as e:
+                    #print("ERROR: {0} is missing in aggregate statistics of {1}".format(line[T], str(type_to_show)))
+                    pass # this agent died before period T  
+            time_series.append(per_period_sum)
+        return time_series
       
-    def prepareData(self, max_period):  # more encapsulation possible? repeated similar code...
+    def prepareData(self, max_period): 
         # prepare number of agents statistics
         no_of_agents_time_series = {}
         for agent_type in ["consumers", "hash_firms", "bean_firms"]:
@@ -113,46 +114,44 @@ class Historian():  # encapsulates full information over past periods s.t. agent
         self.no_of_agents_time_series = no_of_agents_time_series   
          
         # prepare sector-wide mean price
-        for sector in ["hash", "bean"]:
-            filename = "history_file_" + "unit_price_" + sector + ".txt"
-                             
-            with open(filename, "r") as f:
-                lines = f.read().splitlines()
-                lines = [line.split(";") for line in lines]
-            mean_price_time_series = []
-            for T in range(max_period):
-                per_period_price_sum = 0
-                for line in lines:
-                    try:
-                        per_period_price_sum += float(line[T])
-                    except (ValueError, IndexError) as e:
-                        #print("ERROR: {0} is missing in aggregate statistics of {1}".format(line[T], str(type_to_show)))
-                        pass # this agent died before period T
-                per_period_mean_price = per_period_price_sum/int(self.no_of_agents_time_series[sector + "_firms"][T])  
-                mean_price_time_series.append(per_period_mean_price)
-            self.sector_wide_mean_price_time_series[sector] = mean_price_time_series
-            
+        hash_price_sum_time_series = self.buildTimeSeries(max_period, "unit_price", "hash")
+        bean_price_sum_time_series = self.buildTimeSeries(max_period, "unit_price", "bean")   
+        hash_mean_price_time_series = [hash_price_sum_time_series[T]/int(self.no_of_agents_time_series["hash" + "_firms"][T]) for T in range(max_period)]
+        bean_mean_price_time_series = [bean_price_sum_time_series[T]/int(self.no_of_agents_time_series["bean" + "_firms"][T]) for T in range(max_period)]
+        self.sector_wide_mean_price_time_series["hash"] = hash_mean_price_time_series   
+        self.sector_wide_mean_price_time_series["bean"] = bean_mean_price_time_series 
+        
         # prepare sector-wide aggregate production measured in units
-        for sector in ["hash", "bean"]:
-            filename = "history_file_" + "production_" + sector + ".txt"
-                             
-            with open(filename, "r") as f:
-                lines = f.read().splitlines()
-                lines = [line.split(";") for line in lines]
-            production_time_series = []
-            for T in range(max_period):
-                per_period_production_sum = 0
-                for line in lines:
-                    try:
-                        per_period_production_sum += float(line[T])
-                    except (ValueError, IndexError) as e:
-                        #print("ERROR: {0} is missing in aggregate statistics of {1}".format(line[T], str(type_to_show)))
-                        pass # this agent died before period T  
-                production_time_series.append(per_period_production_sum)
-            self.sector_wide_production_time_series[sector] = production_time_series
+        self.sector_wide_production_time_series["hash"] = self.buildTimeSeries(max_period, "production", "hash")
+        self.sector_wide_production_time_series["bean"] = self.buildTimeSeries(max_period, "production", "bean")
         
         # generate weights
+        firm_shares_in_production = {}
+        for ident in ["hash", "bean"]:
+            for key in self.history_files.keys():
+                if key.split(".")[0].endswith("production") and key.startswith(ident):
+                    name = key.split("_")[0]
+                    with open(key, "r") as f:
+                        line = f.read()
+                        data = line.split(";")
+                    firm_shares_in_production[name] = [data[T]/self.sector_wide_production_time_series[ident][T] for T in range(max_period)]
+        self.firm_weights_time_series = firm_shares_in_production
+        
         # prepare sector-wide weighted mean price (weighted with the share of firms production in total production of the sector)
+        
+        for firm_name in self.firm_weights_time_series.keys():
+            firm_weighted_unit_price_time_series = []
+            with open(firm_name + "_unit_price.txt", 'r'):
+                line = f.read()
+                data = line.split(";")
+            for T in range(max_period):    
+                firm_weighted_unit_price_time_series[T] = data[T]*self.firm_weights_time_series[firm_name][T]     
+            
+        hash_weighted_mean_price_time_series = []
+        bean_weighted_mean_price_time_series = []
+        #self.sector_wide_weighted_mean_price_time_series["hash"] = hash_weighted_mean_price_time_series   
+        #self.sector_wide_weighted_mean_price_time_series["bean"] = bean_weighted_mean_price_time_series
+        
         # prepare global price index 
         # prepare GDP time series
     
@@ -164,8 +163,8 @@ class Historian():  # encapsulates full information over past periods s.t. agent
         for time_series_with_displayprops in data:
             graph.plot(range(max_period), time_series_with_displayprops[0] , time_series_with_displayprops[1])
             #graph.set_legend("consumer")     
-            max_value = max(max_value, max(int(v) for v in time_series_with_displayprops[0]))
-        graph.axis([0, max_period, 0, 1.2*max_value])
+            max_value = max(max_value, max(float(v) for v in time_series_with_displayprops[0]))
+        graph.axis([0, max_period, 0, (3/2)*max_value+1])
         graph.set_xlabel(xlable)
         graph.set_ylabel(ylable)
         fig.savefig(title + ".png")
