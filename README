@@ -8,4 +8,5 @@ This repository implements an agent-based economic model based on the paper AGEN
 
 - to execute "simplest_two_sector_economy.py" open a command prompt (terminal) and cd to your python install folder
 - type "python path\to\HashBeansEconomy-adaptive_pricing\simplest_two_sector_economy.py"
+- a folder containing text/cvs files with the model output "HashBeansEconYYYYMMDDHHMMSS" will be created in your python install folder 
 - if you use graphical output the program will not terminate until all windows are closed
