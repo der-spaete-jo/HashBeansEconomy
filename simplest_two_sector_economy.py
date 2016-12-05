@@ -6,38 +6,12 @@ Copyright Johannes Katzer, 2016
 
 from random import randrange, choice
 from math import floor
-import matplotlib.pyplot as plt
+
+from init_params import *
 from OutputHandler import Historian
 
-""" Initial economy data """
-TMAX = 20                      #how many rounds?
-NUMBER_OF_CONSUMERS = 50        # K_0
-NUMBER_OF_HASH_FIRMS = 15       # J_0
-NUMBER_OF_BEAN_FIRMS = 15       # N_0
-CAP_UNIT_PRICE_HASH = 2        # p_H
-CAP_UNIT_PRICE_BEAN = 2        # p_B
-
-""" Initial firm data """
-INIT_MONEY = 25                # Money_0
-INIT_CAP = 30                  # Cap_0
-PER_CAP_COSTS = 0.07           # f
-FIX_COSTS = 0.25               # F
-QUADRATIC_COEFFICIENT = 0.015   # S
-LINEAR_COEFFICIENT = 0.3       # R
-MONEY_HOLDING_RATE = 0.8       # m
-DIVIDEND_RATE = 0.02           # d
+INITIAL_ECONOMY_DATA = [TMAX, NUMBER_OF_CONSUMERS, NUMBER_OF_HASH_FIRMS, NUMBER_OF_BEAN_FIRMS, CAP_UNIT_PRICE_HASH, CAP_UNIT_PRICE_BEAN]
 INITIAL_FIRM_DATA = [INIT_MONEY, INIT_CAP, PER_CAP_COSTS, FIX_COSTS, QUADRATIC_COEFFICIENT, LINEAR_COEFFICIENT, MONEY_HOLDING_RATE, DIVIDEND_RATE]
-
-""" Initial consumer data """
-SUBSISTENCE_NEED_HASH = 4       # h_sn
-SUBSISTENCE_NEED_BEAN = 6       # b_sn
-RELATIVE_PREFERENCE_HASH = 0.5  # a
-ENDOW = []                      # [Endow_0,...,Endow_TMAX]
-Endow_0 = 20
-ENDOW.append(Endow_0)
-for T in range(TMAX):
-    Endow_T = randrange(18,23)
-    ENDOW.append(Endow_T)
 INITIAL_CONSUMER_DATA = [SUBSISTENCE_NEED_HASH, SUBSISTENCE_NEED_BEAN, RELATIVE_PREFERENCE_HASH, ENDOW]
 
 class EconomyController():
@@ -238,9 +212,7 @@ class EconomyController():
             self.historian.mergerFiles(*args)
             
         self.historian.prepareData(self.t_max)
-        self.historian.prepareGraphs(self.t_max)    
-        
-        plt.show()
+        #self.historian.prepareGraphs(self.t_max)    
         
         print("Terminated!")
        
@@ -568,5 +540,5 @@ def createAgent(economy_controller, repr_string):
         new_agent = Consumer(*data) 
         economy_controller.registerAgent(new_agent)
         
-invisible_hand = EconomyController(TMAX, NUMBER_OF_CONSUMERS, NUMBER_OF_HASH_FIRMS, NUMBER_OF_BEAN_FIRMS, CAP_UNIT_PRICE_HASH, CAP_UNIT_PRICE_BEAN, INITIAL_CONSUMER_DATA, INITIAL_FIRM_DATA)
+invisible_hand = EconomyController(*INITIAL_ECONOMY_DATA, INITIAL_CONSUMER_DATA, INITIAL_FIRM_DATA)
 invisible_hand.run()  
