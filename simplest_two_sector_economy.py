@@ -37,7 +37,12 @@ class EconomyController():
         self.historian = Historian()
         self.historian.initializeEconomyHistory()      
         self.initializeAgents()  
-        
+    
+        self.period = 0  
+		
+    def getPeriod(self):
+        return self.period
+		
     def initializeAgents(self):
         for k in range(self.K_0):
             consumer = Consumer(*self.init_consumer_data)
@@ -90,7 +95,7 @@ class EconomyController():
             print(agent) 
         del agent
         
-    def priceDiscoveryProcess(self, hash_supply, bean_supply, solvent_consumers, stocked_firms, T, k):
+    def priceDiscoveryProcess(self, hash_supply, bean_supply, solvent_consumers, stocked_firms, s):
         """ Consumers reveal lowest price and chose their demand """
         try: 
             min_p_h = min([offer[0] for offer in hash_supply.values()])
@@ -131,7 +136,7 @@ class EconomyController():
                     stocked_firms.remove(f)
                     del(hash_supply[f])
                 except ValueError:
-                    print('ERROR: {0} was not removed from stocked firms in the price discovery round {1} in period {2}'.format(f, T, k))                
+                    print('ERROR: {0} was not removed from stocked firms in the price discovery round {1} in period {2}'.format(f, self.getPeriod(), s))                
             elif residual_offer[1] > 0:
                 hash_supply[f] = residual_offer
                 
@@ -142,7 +147,7 @@ class EconomyController():
                     stocked_firms.remove(f)
                     del(bean_supply[f])
                 except ValueError:
-                    print('ERROR: {0} was not removed from stocked firms in the price discovery round {1} in period {2}'.format(f, T, k))                
+                    print('ERROR: {0} was not removed from stocked firms in the price discovery round {1} in period {2}'.format(f, self.getPeriod(), s))                
             elif residual_offer[1] > 0:
                 bean_supply[f] = residual_offer
                 
@@ -151,8 +156,9 @@ class EconomyController():
     def run(self):
         
         for T in range(self.t_max):
+            self.period += 1
             print("=====================")
-            print("starting period {0}".format(T))
+            print("starting period {0}".format(self.getPeriod()))
             self.historian.reportValue("history_file", "no_of_consumers", len(self.K))
             self.historian.reportValue("history_file", "no_of_hash_firms", len(self.J))
             self.historian.reportValue("history_file", "no_of_bean_firms", len(self.N))
@@ -178,11 +184,11 @@ class EconomyController():
             """ trade """            
             solvent_consumers = list(consumers)
             stocked_firms = list(firms)
-            k = 0
+            s = 0
             while solvent_consumers and stocked_firms: # there is supply left and solvent consumers exist
-                hash_supply, bean_supply, solvent_consumers, stocked_firms = self.priceDiscoveryProcess(hash_supply, bean_supply, solvent_consumers, stocked_firms, T, k)
-                k += 1
-                if k > len(self.K)*(len(self.J)+len(self.N)):
+                hash_supply, bean_supply, solvent_consumers, stocked_firms = self.priceDiscoveryProcess(hash_supply, bean_supply, solvent_consumers, stocked_firms, s)
+                s += 1
+                if s > len(self.K)*(len(self.J)+len(self.N)):
                     print("ERROR: Price discovery process produced infinite loop and was canceled")
                     break
                 
@@ -236,19 +242,17 @@ class Firm():
         
         self.unit_price = 1             # period T unit price for the good, chosen in updateSupplyOffer()
         self.production = self.Cap      # period T quantity produced of the good, chosen in updateSupplyOffer() 
-        """ intern calculations """
+        """ intern calculations and derived variables """
         self.stock = self.production    # period T round X residual quantity of the good (left over after some price discovery rounds)
         self.demand_queue = []          # period T Round X demand queue 
         self.Cap_old = 0                # period T-1 production capacities  
         
-        """ derived variables """ 
         self.FCosts =  f*self.Cap + F   
-        self.NetWorth = 0   
-        
+        self.NetWorth = 0           
         self.quantity_sold = 0          # period T quantity sold
-        self.TCosts = 0                 # period T-1 total costs
-        self.revenue = 0                # period T-1 revenues
-        self.profit = 0                 # period T-1 profit
+        self.TCosts = 0                 # period T total costs
+        self.revenue = 0                # period T revenues
+        self.profit = 0                 # period T profit
         
         
     """ getter, setter and updater methods """  
@@ -533,10 +537,14 @@ class Consumer():
         return strng
 
 def createAgent(economy_controller, repr_string):
+    nxt_per = economy_controller.getPeriod()+1
     inform = repr_string.split(";")
-    if inform[0].startswith("C"):
-        data = [int(v) for v in inform[1:]]
-        data.append()
+    data = []
+    if inform[0].startswith("C"): # we got a repr_string of a consumer
+        params = [int(v) for v in inform[1:4]]
+        data.append(params)
+        Endow = inform[5].translate({ord(v) : None for v in '[]'}).split(",")[nxt_per:]
+        data.append(Endow)
         new_agent = Consumer(*data) 
         economy_controller.registerAgent(new_agent)
         
