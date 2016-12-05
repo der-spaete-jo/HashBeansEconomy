@@ -9,10 +9,10 @@ import datetime
 import os
 
 class Historian():  # encapsulates full information over past periods s.t. agents have no access
-    def __init__(self):
+    def __init__(self, output_dir = ""):
 
         """ program organization """
-        self.wd_local_path = None        
+        self.output_dir = output_dir # absolute path to output directory      
         self.history_files={}        
         self.createHistory()
         """ time series'es resulting from the data """
@@ -35,7 +35,7 @@ class Historian():  # encapsulates full information over past periods s.t. agent
         self.createHistoryFile(agent.getName() + "_profit" + ".txt")         # and this profit
     def initializeConsumerHistory(self, agent):        
         self.createHistoryFile(agent.getName() + "_income" + ".txt")         # Given my income in period T
-        self.createHistoryFile(agent.getName() + "_expenditures" + ".txt")   # 
+        self.createHistoryFile(agent.getName() + "_expenditures" + ".txt")   # ...
         self.createHistoryFile(agent.getName() + "_savings" + ".txt") 
         self.createHistoryFile(agent.getName() + "_hash" + ".txt")   
         self.createHistoryFile(agent.getName() + "_bean" + ".txt") 
@@ -50,9 +50,12 @@ class Historian():  # encapsulates full information over past periods s.t. agent
         date_string = date_string.split(".")[0]
         date_string = date_string.translate({ord(v) : None for v in ' -:'})
         name = "HashBeansEcon" + date_string
-        os.mkdir(name)
+        if self.output_dir: 
+            name = output_dir + "\\" + name
+            os.mkdir(name)            
+        else:   # create output folder right in place, precisely as a sub dir of your current working directory
+            os.mkdir(name)
         os.chdir(name)
-        self.wd_local_path = name
         
     def createHistoryFile(self, file_name):
         f = open(file_name, "w")
