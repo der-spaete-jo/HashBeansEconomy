@@ -11,23 +11,26 @@ from init_params import *
 from OutputHandler import Historian
 
 INITIAL_ECONOMY_DATA = [TMAX, NUMBER_OF_CONSUMERS, NUMBER_OF_HASH_FIRMS, NUMBER_OF_BEAN_FIRMS, CAP_UNIT_PRICE_HASH, CAP_UNIT_PRICE_BEAN]
-INITIAL_FIRM_DATA = [INIT_MONEY, INIT_CAP, PER_CAP_COSTS, FIX_COSTS, QUADRATIC_COEFFICIENT, LINEAR_COEFFICIENT, MONEY_HOLDING_RATE, DIVIDEND_RATE]
 INITIAL_CONSUMER_DATA = [SUBSISTENCE_NEED_HASH, SUBSISTENCE_NEED_BEAN, RELATIVE_PREFERENCE_HASH, ENDOW]
+INITIAL_HASH_FIRM_DATA = [INIT_MONEY_HASH, INIT_CAP_HASH, PER_CAP_COSTS_HASH, FIX_COSTS_HASH, QUADRATIC_COEFFICIENT_HASH, LINEAR_COEFFICIENT_HASH, MONEY_HOLDING_RATE_HASH, DIVIDEND_RATE_HASH]
+INITIAL_BEAN_FIRM_DATA = [INIT_MONEY_BEAN, INIT_CAP_BEAN, PER_CAP_COSTS_BEAN, FIX_COSTS_BEAN, QUADRATIC_COEFFICIENT_BEAN, LINEAR_COEFFICIENT_BEAN, MONEY_HOLDING_RATE_BEAN, DIVIDEND_RATE_BEAN]
 
 class EconomyController():
-    def __init__(self, t_max, K_0, J_0, N_0, p_H, p_B, init_consumer_data, init_firm_data):
-        self.t_max = t_max
-        self.K = []
-        self.J = []
-        self.N = []
+    def __init__(self, t_max, K_0, J_0, N_0, p_H, p_B, init_consumer_data, init_hash_firm_data, init_bean_firm_data):
+        self.t_max = t_max        
         self.K_0 = K_0
         self.J_0 = J_0
         self.N_0 = N_0
         self.p_H = p_H
-        self.p_B = p_B
+        self.p_B = p_B		
+        
+        self.K = []
+        self.J = []
+        self.N = []
+		
         self.init_consumer_data = init_consumer_data
-        self.init_hashfirm_data = init_firm_data + [self.p_H]
-        self.init_beanfirm_data = init_firm_data + [self.p_B]        
+        self.init_hashfirm_data = init_hash_firm_data + [self.p_H]
+        self.init_beanfirm_data = init_bean_firm_data + [self.p_B]        
         self.Div_per_capita = 0          
                 
         self.consumer_id = 101       
@@ -548,5 +551,5 @@ def createAgent(economy_controller, repr_string):
         new_agent = Consumer(*data) 
         economy_controller.registerAgent(new_agent)
         
-invisible_hand = EconomyController(*INITIAL_ECONOMY_DATA, INITIAL_CONSUMER_DATA, INITIAL_FIRM_DATA)
+invisible_hand = EconomyController(*INITIAL_ECONOMY_DATA, INITIAL_CONSUMER_DATA, INITIAL_HASH_FIRM_DATA, INITIAL_BEAN_FIRM_DATA)
 invisible_hand.run()  
