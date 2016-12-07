@@ -1,12 +1,2 @@
-Hash and Beans Economy (ABM)
-
-This repository implements an agent-based economic model based on the paper AGENT-BASED COMPUTATIONAL ECONOMICS:A CONSTRUCTIVE APPROACH TO ECONOMIC THEORY by Leigh Tesfatsion (2006).
-
-- switch to the branch "adaptive_pricing" and clone/download it 
-- make sure Python 3 and matplotlib are installed
-- you can comment out the marked lines in "simplest_two_sector_economy.py" to get rid of matplotlib
-
-- to execute "simplest_two_sector_economy.py" open a command prompt (terminal) and cd to your python install folder
-- type "python path\to\HashBeansEconomy-adaptive_pricing\simplest_two_sector_economy.py"
-- a folder containing text/cvs files with the model output "HashBeansEconYYYYMMDDHHMMSS" will be created in your python install folder 
-- if you use graphical output the program will not terminate until all windows are closed
+Create a class "InputHandler" that provides more functionalities to set inititial parameters. The "init_params.py" defines the same initial values for all agents of a given type (all consumers start with the same relative preference for hash). 
+Example use would be that the EconomyController invokes some getInitParamsFor(agent) method of the InputHandler, and saves the returned value in self.init_consumer_data.  
