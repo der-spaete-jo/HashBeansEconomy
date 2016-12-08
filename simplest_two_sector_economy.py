@@ -8,6 +8,7 @@ from random import randrange, choice
 from math import floor
 
 from init_params import *
+from InputHandler import InputHandler
 from OutputHandler import Historian
 
 INITIAL_ECONOMY_DATA = [TMAX, NUMBER_OF_CONSUMERS, NUMBER_OF_HASH_FIRMS, NUMBER_OF_BEAN_FIRMS, CAP_UNIT_PRICE_HASH, CAP_UNIT_PRICE_BEAN]
@@ -24,6 +25,8 @@ class EconomyController():
         self.p_H = p_H
         self.p_B = p_B		
         
+        self.InputHandler = self.initializeInputHandler(self.K_0, self.J_0, self.N_0)        
+                
         self.K = []
         self.J = []
         self.N = []
@@ -46,8 +49,21 @@ class EconomyController():
     def getPeriod(self):
         return self.period
 		
+    def initializeInputHandler(self, K_0, J_0, N_0):
+        InputHandler = InputHandler(K_0, J_0, N_0)
+        #self.InputHandler.setFlag("RELATIVE_PREFERENCE_HASH", "uniform")
+        #self.InputHandler.setFlag(param_name_2, distribution_2)
+        #self.InputHandler.setFlag(param_name_3, distribution_3)
+        self.InputHandler.drawParams()
+        if InputHandler.getEnabledState():
+            return InputHandler
+        else:
+            return None
+    
     def initializeAgents(self):
         for k in range(self.K_0):
+            if self.InputHandler:
+                self.init_consumer_data = self.InputHandler.getInitParams("Consumer", self.init_consumer_data, k)
             consumer = Consumer(*self.init_consumer_data)
             self.registerAgent(consumer)
         for j in range(self.J_0):
