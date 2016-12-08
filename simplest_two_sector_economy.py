@@ -112,7 +112,7 @@ class EconomyController():
         except ValueError:
             min_p_b = -1
             competitive_bean_firms = [] 
-      
+
         iter_consumers = solvent_consumers    
         for c in iter_consumers: 
             if c.getResidualIncome() > 0 and c.updateShoppingList(min_p_h, min_p_b):                
@@ -156,7 +156,7 @@ class EconomyController():
                 
         return hash_supply, bean_supply, solvent_consumers, stocked_firms
         
-    def run(self):
+    def economyloop(self):
         
         for T in range(self.t_max):
             self.period += 1
@@ -552,4 +552,4 @@ def createAgent(economy_controller, repr_string):
         economy_controller.registerAgent(new_agent)
         
 invisible_hand = EconomyController(*INITIAL_ECONOMY_DATA, INITIAL_CONSUMER_DATA, INITIAL_HASH_FIRM_DATA, INITIAL_BEAN_FIRM_DATA)
-invisible_hand.run()  
+invisible_hand.economyloop()  
