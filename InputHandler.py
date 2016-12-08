@@ -3,10 +3,12 @@ Created on 07.12.2016
 HashBeansEconomy/InputHandler.py
 Copyright Johannes Katzer, 2016
 
-This class implements both the numerical basis and the handing over of "distributed parameters" to the EconomyController.
+This class implements both the numerical basis and the handing over of "distributed parameters" to the 
+EconomyController.
 
-To use it, an InputHandler object needs to be instantiated during the EconomyController.__init__ method:
-add "self.init_handler = InputHandler()" anywhere in the __init__ method.
+To use it, there are two possibilities: 1) go to branch "integrate_InputHandler". 
+2) Do the integration by yourself: an InputHandler object needs to be instantiated during the 
+EconomyController.__init__ method: add "self.init_handler = InputHandler()" anywhere in the __init__ method.
 
 The core peace of the InputHandler is getInitParams(self, agent_type, init_agent_data). It is used
 to overwrite the content of some init_agent_data list in EconomyController.initializeAgents(). Then, instead 
@@ -42,7 +44,7 @@ class InputHandler():
         self.J_0 = no_of_hashfirms
         self.N_0 = no_of_beanfirms
         self.agents_to_numbers = {"Consumer": no_of_consumers, "HashFirm": no_of_hashfirms, "BeanFirm": no_of_beanfirms}
-        self.disabled = False
+        self.enabled = True
         
         self.distribution_params = {}
         self.setDistributionParams()
@@ -50,11 +52,11 @@ class InputHandler():
         self.flagged_params = {}
         self.drawn_init_params = {}
     
-    def getDisabledState(self):
-        return self.disabled
+    def getEnabledState(self):
+        return self.enabled
         
-    def switchDisabledState(self):
-        self.disabled = not self.disabled
+    def switchEnabledState(self):
+        self.enabled = not self.enabled
     
     def setFlag(self, initial_parameter, flag):
         """ init parameter is a string containing the name of some initial parameter in the language of init_params.py
@@ -75,7 +77,7 @@ class InputHandler():
         does this for each flagged parameter
         and for each agent that needs that parameter """
         if self.flagged_params == {}: # empty dict -> no flags were set
-            self.switchDisabledState()
+            self.switchEnabledState() # => EconomyController.InputHandler will be set to None
         else:
             for param_name in self.flagged_params.keys():
                 sample_size = self.agents_to_numbers[self.computeAgentType(param_name)]
